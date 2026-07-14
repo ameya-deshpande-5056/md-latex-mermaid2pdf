@@ -2,6 +2,8 @@
 
 A browser-based Markdown editor for writing documents with LaTeX equations, Mermaid diagrams, syntax-highlighted code, and print-ready page layouts. It runs as a small static web app—no build step or package installation is required.
 
+**[Open the live app](https://mdlatexmermaid2pdf.netlify.app/)**
+
 ## Features
 
 - Live Markdown preview with tables, task lists, footnotes, definition lists, and typographic extensions
