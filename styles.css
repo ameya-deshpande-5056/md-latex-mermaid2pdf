@@ -85,6 +85,19 @@ button:hover {
   min-width: 0;
 }
 
+.topbar-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.topbar-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+
 .topbar h1,
 .topbar p,
 .panel h2 {
@@ -96,8 +109,14 @@ button:hover {
   line-height: 1.2;
 }
 
+.topbar-title .github-button-small {
+  transform: scale(0.88);
+  transform-origin: center left;
+  margin-top: -1px;
+}
+
 .topbar p {
-  margin-top: 3px;
+  margin-top: 0;
   color: var(--muted);
   font-size: 13px;
 }
