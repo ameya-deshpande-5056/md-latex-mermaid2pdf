@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Markdown LaTeX PDF Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+  <style id="print-page-style">@page { size: A4 portrait; margin: 16mm; }</style>
+  <script>
+    window.dependencyWarnings = [];
+    const originalConsoleWarn = console.warn.bind(console);
+    console.warn = (...args) => {
+      const message = args.map(String).join(" ");
+      if (/deprecat/i.test(message)) window.dependencyWarnings.push(message);
+      originalConsoleWarn(...args);
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/dompurify@latest/dist/purify.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/markdown-it@latest/dist/markdown-it.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/markdown-it-abbr@latest/dist/markdown-it-abbr.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/markdown-it-deflist@latest/dist/markdown-it-deflist.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/markdown-it-emoji@latest/dist/markdown-it-emoji.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/markdown-it-footnote@latest/dist/markdown-it-footnote.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/markdown-it-ins@latest/dist/markdown-it-ins.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/markdown-it-mark@latest/dist/markdown-it-mark.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/markdown-it-sub@latest/dist/markdown-it-sub.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/markdown-it-sup@latest/dist/markdown-it-sup.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/markdown-it-task-lists@latest/dist/markdown-it-task-lists.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@latest/highlight.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.min.js"></script>
+  <script>
+    window.MathJax = {
+      loader: {
+        load: ["[tex]/bbox", "[tex]/braket", "[tex]/cancel", "[tex]/color", "[tex]/html", "[tex]/mathtools", "[tex]/mhchem", "[tex]/noerrors", "[tex]/physics", "[tex]/textmacros", "[tex]/unicode", "[tex]/upgreek"]
+      },
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true,
+        tags: "ams",
+        packages: { "[+]": ["bbox", "braket", "cancel", "color", "html", "mathtools", "mhchem", "noerrors", "physics", "textmacros", "unicode", "upgreek"] }
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@latest/es5/tex-mml-chtml.js"></script>
+  <script defer src="app.js?v=20260714-auto-title"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <h1>Markdown LaTeX PDF Studio</h1>
+        <p>Write, format, render equations, diagrams, code, and print.</p>
+      </div>
+      <div class="top-actions">
+        <button id="toggle-tools" class="pane-toggle" type="button" aria-label="Toggle format panel" title="Toggle format panel" aria-controls="format-panel" aria-expanded="true">
+          <span class="pane-icon pane-icon-left" aria-hidden="true"></span>
+        </button>
+        <button id="toggle-preview" class="pane-toggle" type="button" aria-label="Toggle preview panel" title="Toggle preview panel" aria-controls="preview-panel" aria-expanded="true">
+          <span class="pane-icon pane-icon-right" aria-hidden="true"></span>
+        </button>
+        <button id="open-file" type="button">Open</button>
+        <button id="save-md" type="button">Save MD</button>
+        <button id="save-html" type="button">Save HTML</button>
+        <button id="print-document" type="button" class="primary">Print</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside id="format-panel" class="panel tools">
+        <div class="tools-scroller">
+          <section>
+          <h2>Format</h2>
+          <div class="button-grid">
+            <button type="button" data-insert="bold">Bold</button>
+            <button type="button" data-insert="italic">Italic</button>
+            <button type="button" data-insert="code">Code</button>
+            <button type="button" data-insert="link">Link</button>
+            <button type="button" data-insert="image">Image</button>
+            <button type="button" data-insert="table">Table</button>
+            <button type="button" data-insert="math">Math</button>
+            <button type="button" data-insert="diagram">Diagram</button>
+          </div>
+          <button id="format-md" type="button" class="wide">Format Markdown</button>
+          </section>
+
+          <section>
+          <h2>Document</h2>
+          <label>
+            Title
+            <input id="doc-title" type="text" value="Markdown LaTeX PDF Studio">
+          </label>
+          <label>
+            Page size
+            <select id="page-size">
+              <option value="a4">A4</option>
+              <option value="letter">Letter</option>
+              <option value="legal">Legal</option>
+            </select>
+          </label>
+          <label>
+            Margins
+            <select id="page-margin">
+              <option value="10">Compact</option>
+              <option value="16" selected>Standard</option>
+              <option value="24">Wide</option>
+            </select>
+          </label>
+          <label>
+            Theme
+            <select id="preview-theme">
+              <option value="paper">Paper</option>
+              <option value="scholar">Scholar</option>
+              <option value="technical">Technical</option>
+            </select>
+          </label>
+          <label class="setting-check">
+            <input id="dark-palette" type="checkbox">
+            <span>Dark palette</span>
+          </label>
+          <label class="setting-check">
+            <input id="code-wrap" type="checkbox">
+            <span>Code word wrap</span>
+          </label>
+          </section>
+
+          <section>
+          <h2>Stats</h2>
+          <dl class="stats">
+            <div><dt>Words</dt><dd id="word-count">0</dd></div>
+            <div><dt>Characters</dt><dd id="char-count">0</dd></div>
+            <div><dt>Read time</dt><dd id="read-time">0 min</dd></div>
+            <div><dt>Headings</dt><dd id="heading-count">0</dd></div>
+          </dl>
+          </section>
+        </div>
+      </aside>
+
+      <section class="editor-pane panel">
+        <div class="pane-header">
+          <h2>Markdown + LaTeX + Mermaid</h2>
+          <div class="segmented">
+            <button type="button" data-template="paper">Paper</button>
+            <button type="button" data-template="report">Report</button>
+            <button type="button" data-template="math">Math</button>
+            <label class="editor-wrap-toggle" title="Wrap long editor lines">
+              <input id="editor-wrap" type="checkbox">
+              <span>Wrap</span>
+            </label>
+          </div>
+        </div>
+        <div class="editor-wrap">
+          <pre id="line-numbers" aria-hidden="true">1</pre>
+          <textarea id="editor" wrap="off" spellcheck="false"></textarea>
+        </div>
+      </section>
+
+      <div class="pane-resize-handle" id="editor-resize-handle"></div>
+
+      <section id="preview-panel" class="preview-pane panel">
+        <div class="pane-header">
+          <h2>Preview</h2>
+        </div>
+        <div class="preview-scroller">
+          <article id="preview" class="preview paper"></article>
+        </div>
+      </section>
+
+      <div class="pane-resize-handle" id="preview-resize-handle"></div>
+    </main>
+  </div>
+  <input id="file-input" type="file" accept=".md,.markdown,.txt" hidden>
+</body>
+</html>
