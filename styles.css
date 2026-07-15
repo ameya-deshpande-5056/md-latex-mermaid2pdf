@@ -779,6 +779,10 @@ select {
     align-items: stretch;
   }
 
+  .app-shell.tools-collapsed .workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
   .tools {
     grid-column: 1 / -1;
     display: grid;
@@ -803,6 +807,12 @@ select {
 
   .preview-pane {
     grid-column: auto;
+  }
+
+  .app-shell.tools-collapsed .editor-pane,
+  .app-shell.tools-collapsed .preview-pane {
+    grid-column: auto;
+    min-width: 0;
   }
 
   .app-shell.tools-collapsed .tools,
