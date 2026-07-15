@@ -430,6 +430,7 @@ select {
   line-height: 1.65;
   text-align: right;
   font-variant-numeric: tabular-nums;
+  -webkit-user-select: none;
   user-select: none;
 }
 
