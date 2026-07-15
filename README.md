@@ -9,10 +9,10 @@ A browser-based Markdown editor for writing documents with LaTeX equations, Merm
 - Live Markdown preview with tables, task lists, footnotes, definition lists, and typographic extensions
 - Inline and display LaTeX rendered with MathJax
 - Mermaid diagrams rendered directly in the preview
-- Syntax highlighting for fenced code blocks
+- Language-aware syntax highlighting for fenced code blocks
 - Automatic table of contents with `[[toc]]`
 - A4, Letter, and Legal page layouts with configurable margins
-- Paper, Scholar, and Technical preview themes, plus a dark palette
+- Paper, Scholar, and Technical preview themes, plus an independent dark palette
 - Browser printing and PDF export
 - Markdown and rendered HTML downloads
 - Markdown file import
@@ -20,6 +20,7 @@ A browser-based Markdown editor for writing documents with LaTeX equations, Merm
 - Word, character, heading, and estimated reading-time statistics
 - Responsive, collapsible, and resizable panes
 - Automatic local saving of the document and UI preferences
+- Warning before closing the tab when Markdown changes are unsaved
 
 ## Getting started
 
@@ -41,6 +42,13 @@ You can also open `index.html` directly, although a local server gives more cons
 4. Select **Print**, then choose **Save as PDF** in the browser print dialog.
 
 The document title is derived from the first Markdown heading unless you enter a custom title. It is also used as the downloaded filename.
+
+### Themes
+
+- **Paper** is the default general-purpose print layout.
+- **Scholar** uses academic document styling, including serif typography, restrained headings, paragraph indentation, lighter table rules, and diagram-safe Mermaid rendering.
+- **Technical** uses a sans-serif layout for code-heavy or reference-style documents.
+- **Dark palette** is separate from the theme selector and can be combined with any theme.
 
 ### LaTeX
 
@@ -67,6 +75,8 @@ flowchart LR
   B --> C[PDF]
 ```
 ````
+
+Mermaid diagrams are rendered as SVG in the preview and print output. If Mermaid cannot load, the original diagram source remains visible as a fallback.
 
 ### Table of contents
 
@@ -106,7 +116,7 @@ The current document, settings, pane visibility, and pane widths are stored in t
 
 ## Rendering libraries
 
-The app loads these libraries from jsDelivr:
+The app loads the latest available versions of these libraries from jsDelivr:
 
 - markdown-it and its syntax plugins
 - DOMPurify
