@@ -149,6 +149,8 @@ let resizeStartX = 0;
 let resizeStartEditorWidth = 0;
 let resizeStartPreviewWidth = 0;
 let renderedLineCount = 0;
+let savedContentSnapshot = "";
+let hasUnsavedChanges = false;
 const lineMeasure = document.createElement("div");
 lineMeasure.className = "editor-line-measure";
 document.body.appendChild(lineMeasure);
@@ -156,6 +158,7 @@ document.body.appendChild(lineMeasure);
 document.addEventListener("DOMContentLoaded", async () => {
   configureMarked();
   editor.value = localStorage.getItem("markdown-pdf-content") || sampleDocument;
+  markContentSaved();
   updateLineNumbers();
   docTitle.value = customTitle ? localStorage.getItem("markdown-pdf-title") || deriveDocumentTitle(editor.value) : deriveDocumentTitle(editor.value);
   updateBrowserTitle();
@@ -257,11 +260,13 @@ function runDependencyHealthCheck() {
 function bindEvents() {
   editor.addEventListener("input", () => {
     localStorage.setItem("markdown-pdf-content", editor.value);
+    updateUnsavedState();
     updateLineNumbers();
     updateAutoTitle();
     scheduleRender();
   });
   editor.addEventListener("scroll", syncLineNumbers);
+  window.addEventListener("beforeunload", warnBeforeClose);
   new ResizeObserver(() => updateLineNumbers(true)).observe(editor);
 
   previewTheme.addEventListener("change", () => {
@@ -321,6 +326,7 @@ function bindEvents() {
     button.addEventListener("click", () => {
       editor.value = templates[button.dataset.template];
       localStorage.setItem("markdown-pdf-content", editor.value);
+      updateUnsavedState();
       updateLineNumbers();
       updateAutoTitle();
       render();
@@ -521,6 +527,22 @@ function updateBrowserTitle() {
   document.title = docTitle.value || deriveDocumentTitle(editor.value);
 }
 
+function markContentSaved() {
+  savedContentSnapshot = editor.value;
+  hasUnsavedChanges = false;
+}
+
+function updateUnsavedState() {
+  hasUnsavedChanges = editor.value !== savedContentSnapshot;
+}
+
+function warnBeforeClose(event) {
+  if (!hasUnsavedChanges) return;
+  event.preventDefault();
+  event.returnValue = "You have unsaved markdown changes. Save or print before closing this tab.";
+  return event.returnValue;
+}
+
 async function render() {
   const markdown = editor.value;
   const html = buildHtml(markdown);
@@ -719,11 +741,131 @@ function renderFallbackInline(value) {
 }
 
 function renderCodeBlock(code, language) {
-  const lang = String(language || "plaintext").trim() || "plaintext";
+  const lang = normalizeCodeLanguage(language);
+  const displayLang = escapeHtml(lang);
   if (window.hljs?.getLanguage?.(lang)) {
-    return `<pre><code class="hljs language-${lang}">${window.hljs.highlight(code, { language: lang }).value}</code></pre>`;
+    return `<pre class="code-block code-lang-${displayLang}" data-language="${displayLang}"><code class="hljs language-${displayLang}">${window.hljs.highlight(code, { language: lang }).value}</code></pre>`;
   }
-  return `<pre><code class="language-${escapeHtml(lang)}">${escapeHtml(code)}</code></pre>`;
+  return `<pre class="code-block code-lang-${displayLang}" data-language="${displayLang}"><code class="language-${displayLang}">${highlightFallbackCode(code, lang)}</code></pre>`;
+}
+
+function normalizeCodeLanguage(language) {
+  const lang = String(language || "plaintext").trim().toLowerCase().replace(/[^\w-]/g, "") || "plaintext";
+  const aliases = {
+    cplusplus: "cpp",
+    cxx: "cpp",
+    csharp: "cs",
+    dartlang: "dart",
+    golang: "go",
+    javascript: "js",
+    jsx: "js",
+    node: "js",
+    nodejs: "js",
+    typescript: "ts",
+    tsx: "ts",
+    py: "python",
+    rb: "ruby",
+    rs: "rust",
+    objectivec: "objc",
+    "obj-c": "objc",
+    octave: "matlab",
+    docker: "dockerfile",
+    gql: "graphql",
+    shell: "bash",
+    sh: "bash",
+    zsh: "bash",
+    ps: "powershell",
+    ps1: "powershell",
+    yml: "yaml"
+  };
+  return aliases[lang] || lang;
+}
+
+function highlightFallbackCode(code, language) {
+  const escaped = escapeHtml(code);
+  if (["js", "ts", "java", "cs", "cpp", "c", "go", "rust", "php", "swift", "kotlin", "dart", "scala", "objc"].includes(language)) {
+    return applyFallbackCodeRules(escaped, [
+      [/(&quot;.*?&quot;|'.*?'|`[\s\S]*?`)/g, "hljs-string"],
+      [/\b(\d+(?:\.\d+)?)\b/g, "hljs-number"],
+      [/\b(true|false|null|undefined|None|nil)\b/g, "hljs-literal"],
+      [/\b(abstract|as|assert|async|await|base|bool|break|case|catch|char|class|const|continue|covariant|default|deferred|do|double|dynamic|else|enum|export|extends|extension|external|factory|false|final|finally|float|for|from|function|get|if|implements|import|in|interface|int|is|late|let|library|match|mixin|mut|namespace|new|null|operator|package|part|private|protected|public|required|return|sealed|set|static|string|struct|super|switch|sync|this|throw|true|try|typedef|using|var|void|when|while|with|yield)\b/g, "hljs-keyword"]
+    ]);
+  }
+  if (["r", "lua", "perl", "matlab"].includes(language)) {
+    return applyFallbackCodeRules(escaped, [
+      [/(&quot;.*?&quot;|'.*?')/g, "hljs-string"],
+      [/\b(\d+(?:\.\d+)?)\b/g, "hljs-number"],
+      [/\b(TRUE|FALSE|NULL|NA|NaN|Inf|nil|true|false)\b/g, "hljs-literal"],
+      [/\b(function|if|else|for|while|repeat|return|break|next|local|end|then|do|until|sub|my|our|use|package|begin|switch|case|otherwise|try|catch)\b/g, "hljs-keyword"]
+    ]);
+  }
+  if (["dockerfile", "nginx", "graphql"].includes(language)) {
+    return applyFallbackCodeRules(escaped, [
+      [/(&quot;.*?&quot;|'.*?')/g, "hljs-string"],
+      [/#.*$/gm, "hljs-comment"],
+      [/\b(FROM|RUN|CMD|LABEL|EXPOSE|ENV|ADD|COPY|ENTRYPOINT|VOLUME|USER|WORKDIR|ARG|ONBUILD|STOPSIGNAL|HEALTHCHECK|SHELL|server|location|upstream|listen|proxy_pass|query|mutation|subscription|fragment|type|input|enum|interface|scalar|schema)\b/g, "hljs-keyword"]
+    ]);
+  }
+  if (language === "python") {
+    return applyFallbackCodeRules(escaped, [
+      [/(&quot;.*?&quot;|'.*?')/g, "hljs-string"],
+      [/\b(\d+(?:\.\d+)?)\b/g, "hljs-number"],
+      [/\b(True|False|None)\b/g, "hljs-literal"],
+      [/\b(def|class|return|if|elif|else|for|while|in|import|from|as|try|except|finally|with|lambda|yield|async|await|pass|break|continue|global|nonlocal|assert|raise)\b/g, "hljs-keyword"]
+    ]);
+  }
+  if (["bash", "powershell"].includes(language)) {
+    return applyFallbackCodeRules(escaped, [
+      [/(#.*)$/gm, "hljs-comment"],
+      [/(&quot;.*?&quot;|'.*?')/g, "hljs-string"],
+      [/\b(if|then|else|elif|fi|for|while|do|done|case|esac|function|echo|cd|ls|cat|grep|awk|sed|curl|git|npm|python|node)\b/g, "hljs-keyword"]
+    ]);
+  }
+  if (["html", "xml"].includes(language)) {
+    return escaped
+      .replace(/(&lt;\/?)([\w:-]+)/g, '$1<span class="hljs-name">$2</span>')
+      .replace(/\s([\w:-]+)=/g, ' <span class="hljs-attr">$1</span>=')
+      .replace(/(&quot;.*?&quot;)/g, '<span class="hljs-string">$1</span>');
+  }
+  if (["css", "scss"].includes(language)) {
+    return escaped
+      .replace(/([.#]?[\w-]+)(\s*\{)/g, '<span class="hljs-selector-class">$1</span>$2')
+      .replace(/([\w-]+)(\s*:)/g, '<span class="hljs-attribute">$1</span>$2')
+      .replace(/(:\s*)([^;{}]+)/g, '$1<span class="hljs-string">$2</span>');
+  }
+  if (["json", "yaml", "toml", "ini"].includes(language)) {
+    return applyFallbackCodeRules(escaped, [
+      [/(&quot;[^&]+&quot;)(\s*:)/g, "hljs-attr"],
+      [/(:\s*)(&quot;.*?&quot;)/g, "hljs-string"],
+      [/\b(\d+(?:\.\d+)?|true|false|null)\b/g, "hljs-literal"]
+    ]);
+  }
+  if (language === "sql") {
+    return applyFallbackCodeRules(escaped, [
+      [/(&quot;.*?&quot;|'.*?')/g, "hljs-string"],
+      [/\b(select|from|where|join|left|right|inner|outer|on|insert|into|update|delete|create|alter|drop|table|view|index|group|by|order|having|limit|offset|as|and|or|not|null|is|in|exists)\b/gi, "hljs-keyword"]
+    ]);
+  }
+  return escaped;
+}
+
+function applyFallbackCodeRules(source, rules) {
+  const tokens = [];
+  let output = source;
+  for (const [pattern, className] of rules) {
+    output = output.replace(pattern, (...args) => {
+      const match = args[0];
+      const offset = args.at(-2);
+      const groups = args.slice(1, -2);
+      const highlighted = groups.length > 1 && groups.some(Boolean)
+        ? match.replace(groups.find(Boolean), `<span class="${className}">${groups.find(Boolean)}</span>`)
+        : `<span class="${className}">${match}</span>`;
+      const token = `@@CODETOKEN${tokens.length}@@`;
+      tokens.push(highlighted);
+      return token;
+    });
+  }
+  return tokens.reduce((html, value, index) => html.replaceAll(`@@CODETOKEN${index}@@`, value), output);
 }
 
 function sanitizePreviewHtml(html, options) {
@@ -913,6 +1055,7 @@ function wrapSelection(before, after, fallback) {
   editor.setRangeText(`${before}${selected}${after}`, start, end, "select");
   editor.focus();
   localStorage.setItem("markdown-pdf-content", editor.value);
+  updateUnsavedState();
   updateLineNumbers();
   updateAutoTitle();
   render();
@@ -940,6 +1083,7 @@ function formatMarkdown() {
 
   editor.value = alignMarkdownTables(formatted.join("\n")).trim() + "\n";
   localStorage.setItem("markdown-pdf-content", editor.value);
+  updateUnsavedState();
   updateLineNumbers();
   updateAutoTitle();
   render();
@@ -973,6 +1117,7 @@ function openMarkdownFile() {
   reader.onload = () => {
     editor.value = String(reader.result || "");
     localStorage.setItem("markdown-pdf-content", editor.value);
+    markContentSaved();
     updateLineNumbers();
     updateAutoTitle();
     render();
@@ -984,18 +1129,21 @@ function openMarkdownFile() {
 function saveMarkdown() {
   updateAutoTitle();
   download(`${fileBaseName()}.md`, editor.value, "text/markdown");
+  markContentSaved();
 }
 
 function saveHtml() {
   updateAutoTitle();
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(docTitle.value)}</title><link rel="stylesheet" href="styles.css"></head><body><article class="${preview.className}">${preview.innerHTML}</article></body></html>`;
   download(`${fileBaseName()}.html`, html, "text/html");
+  markContentSaved();
 }
 
 async function printDocument() {
   updateAutoTitle();
   await render();
   window.print();
+  markContentSaved();
 }
 
 function download(filename, content, type) {

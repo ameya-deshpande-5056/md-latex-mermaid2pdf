@@ -488,6 +488,95 @@ select {
 
 .preview.scholar {
   font-family: "Latin Modern Roman", Georgia, serif;
+  max-width: min(var(--preview-width, 210mm), calc(100% - 24px));
+  color: #111827;
+  line-height: 1.72;
+  text-align: left;
+  hyphens: manual;
+}
+
+.preview.scholar h1,
+.preview.scholar h2,
+.preview.scholar h3 {
+  font-variant-caps: small-caps;
+  letter-spacing: .01em;
+  text-align: left;
+}
+
+.preview.scholar h1 {
+  border-bottom: 1px solid #9ca3af;
+  font-size: 1.95rem;
+}
+
+.preview.scholar h2 {
+  border-bottom: 0;
+  font-size: 1.32rem;
+}
+
+.preview.scholar p {
+  margin: .72rem 0;
+  text-indent: 1.5em;
+}
+
+.preview.scholar h1 + p,
+.preview.scholar h2 + p,
+.preview.scholar h3 + p,
+.preview.scholar blockquote p,
+.preview.scholar li p,
+.preview.scholar .toc + p {
+  text-indent: 0;
+}
+
+.preview.scholar blockquote {
+  background: transparent;
+  border-left-width: 2px;
+  font-size: .95em;
+}
+
+.preview.scholar table {
+  font-size: .92em;
+}
+
+.preview.scholar th {
+  background: transparent;
+  border-top: 2px solid #1f2937;
+  border-bottom: 1px solid #1f2937;
+}
+
+.preview.scholar td {
+  border-left: 0;
+  border-right: 0;
+}
+
+.preview.scholar .toc {
+  background: transparent;
+  border-style: double;
+}
+
+.preview.scholar .footnotes {
+  border-top: 1px solid #9ca3af;
+  padding-top: 10px;
+  font-size: .82em;
+  text-align: left;
+}
+
+.preview.scholar .diagram {
+  margin: 1.2rem 0;
+  text-align: center;
+  text-indent: 0;
+  line-height: normal;
+  hyphens: manual;
+}
+
+.preview.scholar .diagram svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.preview.scholar .diagram p {
+  margin: 0;
+  text-align: initial;
+  text-indent: 0;
 }
 
 .preview.technical {
@@ -525,18 +614,280 @@ select {
 }
 
 .preview pre {
+  --code-keyword: #c792ea;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-comment: #7f8c98;
+  --code-title: #82aaff;
+  --code-attr: #ffcb6b;
+  --code-literal: #ff5370;
+  --code-tag: #f07178;
   overflow: auto;
   max-width: 100%;
   padding: 14px;
   border-radius: 8px;
   background: #111827;
   color: #f8fafc;
+  position: relative;
 }
 
 .preview pre code {
   padding: 0;
   background: transparent;
   color: inherit;
+}
+
+.preview pre.code-lang-js,
+.preview pre.code-lang-ts,
+.preview pre.code-lang-json {
+  --code-keyword: #ffcb6b;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+  --code-attr: #f7df1e;
+  --code-literal: #ff5370;
+}
+
+.preview pre.code-lang-python {
+  --code-keyword: #ffcb6b;
+  --code-string: #9ccc65;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+  --code-attr: #ffd43b;
+  --code-literal: #4b8bbe;
+}
+
+.preview pre.code-lang-html,
+.preview pre.code-lang-xml {
+  --code-tag: #e34f26;
+  --code-attr: #ffcb6b;
+  --code-string: #c3e88d;
+  --code-title: #e34f26;
+}
+
+.preview pre.code-lang-css,
+.preview pre.code-lang-scss {
+  --code-keyword: #c792ea;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #42a5f5;
+  --code-attr: #90caf9;
+  --code-literal: #ffcb6b;
+}
+
+.preview pre.code-lang-bash,
+.preview pre.code-lang-powershell {
+  --code-keyword: #4eaa25;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+  --code-attr: #ffcb6b;
+}
+
+.preview pre.code-lang-java {
+  --code-keyword: #f89820;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+  --code-literal: #ff5370;
+}
+
+.preview pre.code-lang-c,
+.preview pre.code-lang-cpp,
+.preview pre.code-lang-cs {
+  --code-keyword: #659ad2;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+  --code-literal: #ff5370;
+}
+
+.preview pre.code-lang-go {
+  --code-keyword: #00add8;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+  --code-literal: #ff5370;
+}
+
+.preview pre.code-lang-rust {
+  --code-keyword: #dea584;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+  --code-literal: #ff5370;
+}
+
+.preview pre.code-lang-php {
+  --code-keyword: #777bb4;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+}
+
+.preview pre.code-lang-ruby {
+  --code-keyword: #cc342d;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+}
+
+.preview pre.code-lang-swift {
+  --code-keyword: #f05138;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+}
+
+.preview pre.code-lang-kotlin {
+  --code-keyword: #a97bff;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+}
+
+.preview pre.code-lang-dart {
+  --code-keyword: #00b4ab;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #40c4ff;
+  --code-attr: #13b9fd;
+  --code-literal: #0175c2;
+}
+
+.preview pre.code-lang-scala {
+  --code-keyword: #dc322f;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+}
+
+.preview pre.code-lang-objc {
+  --code-keyword: #438eff;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+}
+
+.preview pre.code-lang-r {
+  --code-keyword: #276dc3;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+  --code-literal: #ff5370;
+}
+
+.preview pre.code-lang-lua {
+  --code-keyword: #000080;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+  --code-literal: #ff5370;
+}
+
+.preview pre.code-lang-perl {
+  --code-keyword: #39457e;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+}
+
+.preview pre.code-lang-matlab {
+  --code-keyword: #e16737;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+}
+
+.preview pre.code-lang-sql {
+  --code-keyword: #c792ea;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+}
+
+.preview pre.code-lang-graphql {
+  --code-keyword: #e10098;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #ff80bf;
+  --code-attr: #ffcb6b;
+}
+
+.preview pre.code-lang-dockerfile {
+  --code-keyword: #2496ed;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+}
+
+.preview pre.code-lang-nginx {
+  --code-keyword: #009639;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-title: #82aaff;
+}
+
+.preview pre.code-lang-yaml,
+.preview pre.code-lang-toml,
+.preview pre.code-lang-ini {
+  --code-keyword: #cb171e;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-attr: #ffcb6b;
+}
+
+.preview pre.code-lang-markdown,
+.preview pre.code-lang-md {
+  --code-keyword: #6a737d;
+  --code-string: #c3e88d;
+  --code-title: #82aaff;
+}
+
+.preview .hljs-keyword,
+.preview .hljs-built_in,
+.preview .hljs-selector-tag {
+  color: var(--code-keyword);
+}
+
+.preview .hljs-string,
+.preview .hljs-regexp,
+.preview .hljs-symbol {
+  color: var(--code-string);
+}
+
+.preview .hljs-number {
+  color: var(--code-number);
+}
+
+.preview .hljs-comment,
+.preview .hljs-quote {
+  color: var(--code-comment);
+  font-style: italic;
+}
+
+.preview .hljs-title,
+.preview .hljs-function,
+.preview .hljs-title.function_,
+.preview .hljs-title.class_ {
+  color: var(--code-title);
+}
+
+.preview .hljs-attr,
+.preview .hljs-attribute,
+.preview .hljs-property,
+.preview .hljs-variable {
+  color: var(--code-attr);
+}
+
+.preview .hljs-literal,
+.preview .hljs-meta {
+  color: var(--code-literal);
+}
+
+.preview .hljs-tag,
+.preview .hljs-name {
+  color: var(--code-tag);
 }
 
 .preview .math-fallback {
