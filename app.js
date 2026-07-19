@@ -1142,6 +1142,12 @@ function saveHtml() {
 async function printDocument() {
   updateAutoTitle();
   await render();
+
+  if (/\bKonqueror(?:\/|\b)/i.test(navigator.userAgent)) {
+    window.alert("Konqueror does not support page-initiated printing. Use File → Print… or press Ctrl+P.");
+    return;
+  }
+
   window.print();
   markContentSaved();
 }
