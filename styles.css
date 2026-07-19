@@ -1329,7 +1329,9 @@ select {
 
   .app-shell,
   .workspace,
-  .preview-pane {
+  .preview-pane,
+  .app-shell.preview-collapsed .preview-pane,
+  .preview-pane[hidden] {
     display: block;
     height: auto;
     min-height: 0;
@@ -1338,6 +1340,10 @@ select {
     border: 0;
     box-shadow: none;
     overflow: visible;
+  }
+
+  .preview-pane[hidden] {
+    display: block !important;
   }
 
   .preview-scroller,
