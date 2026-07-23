@@ -121,6 +121,7 @@ $$`
 const editor = document.getElementById("editor");
 const lineNumbers = document.getElementById("line-numbers");
 const preview = document.getElementById("preview");
+const pagedOutput = document.getElementById("paged-output");
 const fileInput = document.getElementById("file-input");
 const docTitle = document.getElementById("doc-title");
 const pageSize = document.getElementById("page-size");
@@ -128,6 +129,7 @@ const pageMargin = document.getElementById("page-margin");
 const previewTheme = document.getElementById("preview-theme");
 const darkPalette = document.getElementById("dark-palette");
 const codeWrap = document.getElementById("code-wrap");
+const smartPagination = document.getElementById("smart-pagination");
 const editorWrap = document.getElementById("editor-wrap");
 const editorContainer = document.querySelector(".editor-wrap");
 const appShell = document.querySelector(".app-shell");
@@ -151,6 +153,10 @@ let resizeStartPreviewWidth = 0;
 let renderedLineCount = 0;
 let savedContentSnapshot = "";
 let hasUnsavedChanges = false;
+let pagedPreviewer = null;
+let detachedPreviewContent = null;
+let renderedSignature = "";
+let renderQueue = Promise.resolve();
 const lineMeasure = document.createElement("div");
 lineMeasure.className = "editor-line-measure";
 document.body.appendChild(lineMeasure);
@@ -168,6 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   pageSize.value = localStorage.getItem("markdown-pdf-page-size") || "a4";
   pageMargin.value = localStorage.getItem("markdown-pdf-page-margin") || "16";
   codeWrap.checked = localStorage.getItem("markdown-pdf-code-wrap") === "true";
+  smartPagination.checked = localStorage.getItem("markdown-pdf-smart-pagination") !== "false";
   editorWrap.checked = localStorage.getItem("markdown-pdf-editor-wrap") === "true";
   applyEditorWrap();
   restorePaneWidths();
@@ -234,7 +241,8 @@ function runDependencyHealthCheck() {
     markdownit: window.markdownit ? "latest" : "fallback",
     highlight: window.hljs?.versionString || "fallback",
     mermaid: window.mermaid?.version || "latest",
-    mathjax: window.MathJax?.version || "fallback"
+    mathjax: window.MathJax?.version || "fallback",
+    pagedjs: window.Paged?.Previewer ? "0.4.3" : "unavailable"
   };
   const checks = {
     sanitizer: typeof window.DOMPurify?.sanitize === "function" || typeof sanitizePreviewHtml === "function",
@@ -242,7 +250,8 @@ function runDependencyHealthCheck() {
     markdownInline: typeof markdownEngine?.renderInline === "function",
     highlight: !window.hljs || (typeof window.hljs.highlight === "function" && typeof window.hljs.getLanguage === "function"),
     mermaid: !window.mermaid || (typeof window.mermaid.initialize === "function" && typeof window.mermaid.render === "function"),
-    mathjax: !window.MathJax || typeof window.MathJax.typesetPromise === "function"
+    mathjax: !window.MathJax || typeof window.MathJax.typesetPromise === "function",
+    pagedjs: !smartPagination.checked || typeof window.Paged?.Previewer === "function"
   };
   const failed = Object.entries(checks).filter(([, passed]) => !passed).map(([name]) => name);
   const deprecations = [...new Set(window.dependencyWarnings || [])];
@@ -267,11 +276,12 @@ function bindEvents() {
   });
   editor.addEventListener("scroll", syncLineNumbers);
   window.addEventListener("beforeunload", warnBeforeClose);
+  window.addEventListener("afterprint", clearPagedDocument);
   new ResizeObserver(() => updateLineNumbers(true)).observe(editor);
 
   previewTheme.addEventListener("change", () => {
     localStorage.setItem("markdown-pdf-theme", previewTheme.value);
-    render();
+    render(true);
   });
 
   docTitle.addEventListener("input", () => {
@@ -296,10 +306,14 @@ function bindEvents() {
   });
   darkPalette.addEventListener("change", () => {
     localStorage.setItem("markdown-pdf-dark-palette", String(darkPalette.checked));
-    render();
+    render(true);
   });
   codeWrap.addEventListener("change", () => {
     localStorage.setItem("markdown-pdf-code-wrap", String(codeWrap.checked));
+    applyFormattingSettings();
+  });
+  smartPagination.addEventListener("change", () => {
+    localStorage.setItem("markdown-pdf-smart-pagination", String(smartPagination.checked));
     applyFormattingSettings();
   });
   editorWrap.addEventListener("change", () => {
@@ -543,18 +557,29 @@ function warnBeforeClose(event) {
   return event.returnValue;
 }
 
-async function render() {
-  const markdown = editor.value;
-  const html = buildHtml(markdown);
-  preview.innerHTML = sanitizePreviewHtml(html, {
-    ADD_TAGS: ["mjx-container"],
-    ADD_ATTR: ["target", "class", "style"]
+async function render(force = false) {
+  clearTimeout(renderTimer);
+  renderTimer = 0;
+  renderQueue = renderQueue.catch(() => {}).then(async () => {
+    const markdown = editor.value;
+    const signature = `${markdown}\u0000${previewTheme.value}\u0000${darkPalette.checked}`;
+    if (!force && signature === renderedSignature && preview.childNodes.length) {
+      applyFormattingSettings();
+      return;
+    }
+    const html = buildHtml(markdown);
+    preview.innerHTML = sanitizePreviewHtml(html, {
+      ADD_TAGS: ["mjx-container"],
+      ADD_ATTR: ["target", "class", "style"]
+    });
+    applyFormattingSettings();
+    linkFootnoteNumbers();
+    updateStats(markdown);
+    await renderMermaid();
+    await renderMath();
+    renderedSignature = signature;
   });
-  applyFormattingSettings();
-  linkFootnoteNumbers();
-  updateStats(markdown);
-  await renderMermaid();
-  await renderMath();
+  return renderQueue;
 }
 
 function linkFootnoteNumbers() {
@@ -1004,6 +1029,7 @@ function applyFormattingSettings() {
   preview.classList.toggle("dark", darkPalette.checked);
   document.documentElement.classList.toggle("dark-print", darkPalette.checked);
   preview.classList.toggle("wrap-code", codeWrap.checked);
+  preview.classList.toggle("smart-pagination", smartPagination.checked);
   preview.style.setProperty("--preview-width", dimensions.width);
   preview.style.setProperty("--preview-min-height", dimensions.minHeight);
   preview.style.setProperty("--preview-padding", `${pageMargin.value}mm`);
@@ -1011,15 +1037,19 @@ function applyFormattingSettings() {
 }
 
 function getPageDimensions() {
-  if (pageSize.value === "letter") return { width: "8.5in", minHeight: "11in" };
-  if (pageSize.value === "legal") return { width: "8.5in", minHeight: "14in" };
-  return { width: "210mm", minHeight: "297mm" };
+  if (pageSize.value === "letter") return { width: "8.5in", minHeight: "11in", name: "Letter" };
+  if (pageSize.value === "legal") return { width: "8.5in", minHeight: "14in", name: "Legal" };
+  return { width: "210mm", minHeight: "297mm", name: "A4" };
 }
 
-function updatePrintPageStyle() {
-  const pageName = pageSize.value === "letter" ? "Letter" : pageSize.value === "legal" ? "Legal" : "A4";
-  const printMargin = darkPalette.checked ? "0" : `${pageMargin.value}mm`;
-  document.getElementById("print-page-style").textContent = `@page { size: ${pageName} portrait; margin: ${printMargin}; }`;
+function getPageContentHeight() {
+  const pageHeight = getPageDimensions().minHeight;
+  const pageHeightPixels = parseFloat(pageHeight) * (pageHeight.endsWith("in") ? 96 : 96 / 25.4);
+  return pageHeightPixels - Number(pageMargin.value) * 2 * (96 / 25.4);
+}
+
+function updatePrintPageStyle(printMargin = darkPalette.checked ? "0" : `${pageMargin.value}mm`) {
+  document.getElementById("print-page-style").textContent = `@page { size: ${getPageDimensions().name} portrait; margin: ${printMargin}; }`;
 }
 
 function updateStats(markdown) {
@@ -1148,8 +1178,156 @@ async function printDocument() {
     return;
   }
 
+  if (smartPagination.checked && !await preparePagedDocument()) return;
   window.print();
   markContentSaved();
+}
+
+async function preparePagedDocument() {
+  clearPagedDocument();
+  if (typeof window.Paged?.Previewer !== "function") {
+    window.alert("Smart pagination is unavailable because Paged.js did not load. Disable Smart pagination to use native browser printing.");
+    return false;
+  }
+
+  await waitForPrintAssets();
+  const article = preview.cloneNode(true);
+  article.removeAttribute("id");
+  article.classList.add("paged-source");
+  const protectedSelector = 'pre, blockquote, .diagram, img, .math-block, mjx-container[display="true"]';
+  const protectedBlocks = [...preview.querySelectorAll(protectedSelector)];
+  const clonedBlocks = [...article.querySelectorAll(protectedSelector)];
+  const pageContentHeight = getPageContentHeight();
+  protectedBlocks.forEach((block, index) => {
+    const limit = block.matches("pre, blockquote") ? 0.5 : 0.85;
+    if (block.getBoundingClientRect().height <= pageContentHeight * limit) {
+      clonedBlocks[index]?.classList.add("paged-keep-together");
+    }
+  });
+  const headings = [...preview.querySelectorAll("h1, h2, h3, h4, h5, h6")];
+  const clonedHeadings = [...article.querySelectorAll("h1, h2, h3, h4, h5, h6")];
+  headings.forEach((heading, index) => {
+    const following = heading.nextElementSibling;
+    if (following && following.getBoundingClientRect().height <= pageContentHeight * 0.5) {
+      clonedHeadings[index]?.classList.add("paged-keep-with-next");
+    }
+  });
+  const expectedTextLength = article.textContent.replace(/\s+/g, "").length;
+  const source = document.createDocumentFragment();
+  source.appendChild(article);
+  detachedPreviewContent = document.createDocumentFragment();
+  detachedPreviewContent.append(...preview.childNodes);
+  let stylesheet;
+
+  try {
+    stylesheet = URL.createObjectURL(new Blob([getPagedStyles()], { type: "text/css" }));
+    pagedPreviewer = new Paged.Previewer();
+    await pagedPreviewer.preview(source, [stylesheet], pagedOutput);
+    removeTrailingEmptyPages();
+    const pagedTextLength = pagedOutput.textContent.replace(/\s+/g, "").length;
+    if (pagedTextLength < expectedTextLength * 0.97) {
+      throw new Error(`Paged output is incomplete: ${pagedTextLength}/${expectedTextLength} characters rendered.`);
+    }
+  } catch (error) {
+    console.error(error);
+    clearPagedDocument();
+    window.alert("Smart pagination failed. Disable Smart pagination to use native browser printing.");
+    return false;
+  } finally {
+    if (stylesheet) URL.revokeObjectURL(stylesheet);
+  }
+
+  document.documentElement.classList.add("paged-print");
+  updatePrintPageStyle("0");
+  return true;
+}
+
+function clearPagedDocument() {
+  document.documentElement.classList.remove("paged-print");
+  pagedOutput.replaceChildren();
+  pagedPreviewer?.polisher?.inserted?.forEach((style) => style.remove());
+  pagedPreviewer = null;
+  if (detachedPreviewContent) {
+    preview.appendChild(detachedPreviewContent);
+    detachedPreviewContent = null;
+  }
+  updatePrintPageStyle();
+}
+
+function removeTrailingEmptyPages() {
+  const pages = [...pagedOutput.querySelectorAll(".pagedjs_page")];
+  while (pages.length > 1) {
+    const page = pages.at(-1);
+    const content = page.querySelector(".pagedjs_page_content") || page;
+    const hasContent = content.textContent.trim() || content.querySelector("img, svg, table, pre, hr, mjx-container, input");
+    if (hasContent) break;
+    page.remove();
+    pages.pop();
+  }
+}
+
+async function waitForPrintAssets() {
+  if (document.fonts?.ready) await document.fonts.ready;
+  await Promise.all([...preview.querySelectorAll("img")].map(async (image) => {
+    if (!image.complete) {
+      await new Promise((resolve) => {
+        image.addEventListener("load", resolve, { once: true });
+        image.addEventListener("error", resolve, { once: true });
+      });
+    }
+    if (image.decode) await image.decode().catch(() => {});
+  }));
+}
+
+function getPagedStyles() {
+  const pageBackground = darkPalette.checked ? "background: #181a1b;" : "";
+  return `
+    @page { size: ${getPageDimensions().name} portrait; margin: ${pageMargin.value}mm; ${pageBackground} }
+    .preview.paged-source {
+      display: block;
+      width: auto;
+      max-width: none;
+      min-height: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      box-shadow: none;
+      overflow: visible;
+    }
+    .preview.paged-source table { display: table; overflow: visible; }
+    .preview.paged-source pre:not(.paged-keep-together),
+    .preview.paged-source .diagram {
+      overflow: visible !important;
+    }
+    .preview.paged-source pre:not(.paged-keep-together) {
+      break-inside: auto !important;
+      page-break-inside: auto !important;
+    }
+    .preview.paged-source pre:not(.paged-keep-together) code {
+      display: block;
+    }
+    .preview.paged-source .diagram svg {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+    .preview.paged-source .paged-keep-with-next {
+      break-after: avoid-page;
+      page-break-after: avoid;
+    }
+    .preview.paged-source p,
+    .preview.paged-source li {
+      orphans: 2;
+      widows: 2;
+    }
+    .preview.paged-source .paged-keep-together,
+    .preview.paged-source tr {
+      break-inside: avoid-page;
+      page-break-inside: avoid;
+    }
+    .preview.paged-source thead { display: table-header-group; }
+    .preview.paged-source .page-break { break-after: page; }
+  `;
 }
 
 function download(filename, content, type) {

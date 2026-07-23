@@ -12,6 +12,7 @@ A browser-based Markdown editor for writing documents with LaTeX equations, Merm
 - Language-aware syntax highlighting for fenced code blocks
 - Automatic table of contents with `[[toc]]`
 - A4, Letter, and Legal page layouts with configurable margins
+- Optional Paged.js smart pagination for book-style page breaking
 - Paper, Scholar, and Technical preview themes, plus an independent dark palette
 - Browser printing and PDF export
 - Markdown and rendered HTML downloads
@@ -116,15 +117,16 @@ The current document, settings, pane visibility, and pane widths are stored in t
 
 ## Rendering libraries
 
-The app loads the latest available versions of these libraries from jsDelivr:
+The app loads these libraries from jsDelivr:
 
 - markdown-it and its syntax plugins
 - DOMPurify
 - Highlight.js
 - Mermaid
 - MathJax
+- Paged.js 0.4.3
 
-If a CDN dependency is unavailable, the app provides basic fallback rendering for Markdown, math, code, and diagrams. Full formatting and diagram support require the corresponding libraries to load successfully.
+If a CDN dependency is unavailable, the app provides basic fallback rendering for Markdown, math, code, and diagrams. Smart pagination requires Paged.js; native browser printing remains available when the setting is disabled.
 
 ## Browser support
 

@@ -16,7 +16,7 @@
   <meta name="twitter:title" content="Markdown LaTeX PDF Studio">
   <meta name="twitter:description" content="A browser-based Markdown, LaTeX, and Mermaid editor with live preview and PDF export.">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=20260720-print-fixes">
+  <link rel="stylesheet" href="styles.css?v=20260723-smart-pagination-5">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -36,6 +36,7 @@
   <style id="print-page-style">@page { size: A4 portrait; margin: 16mm; }</style>
   <script>
     window.dependencyWarnings = [];
+    window.PagedConfig = { auto: false };
     const originalConsoleWarn = console.warn.bind(console);
     console.warn = (...args) => {
       const message = args.map(String).join(" ");
@@ -72,8 +73,8 @@
     };
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@latest/es5/tex-mml-chtml.js"></script>
-  <script async defer src="https://buttons.github.io/buttons.js"></script>
-  <script defer src="app.js?v=20260720-print-fixes"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/pagedjs@0.4.3/dist/paged.polyfill.js"></script>
+  <script defer src="app.js?v=20260723-smart-pagination-5"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -155,6 +156,10 @@
             <input id="code-wrap" type="checkbox">
             <span>Code word wrap</span>
           </label>
+          <label class="setting-check">
+            <input id="smart-pagination" type="checkbox" checked>
+            <span>Smart pagination</span>
+          </label>
           </section>
 
           <section>
@@ -202,6 +207,7 @@
       <div class="pane-resize-handle" id="preview-resize-handle"></div>
     </main>
   </div>
+  <div id="paged-output"></div>
   <input id="file-input" type="file" accept=".md,.markdown,.txt" hidden>
 </body>
 </html>

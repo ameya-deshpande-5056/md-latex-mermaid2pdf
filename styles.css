@@ -126,8 +126,16 @@ button:hover {
 }
 
 .topbar-title .github-button-small {
-  transform: scale(0.88);
-  transform-origin: center left;
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-strong);
+  color: var(--text);
+  font-size: 12px;
+  text-decoration: none;
   margin-top: -1px;
 }
 
@@ -1048,6 +1056,14 @@ select {
   height: 1px;
 }
 
+#paged-output {
+  position: fixed;
+  top: 0;
+  left: -100000px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .preview.dark {
   color-scheme: dark;
   background: #181a1b;
@@ -1389,5 +1405,60 @@ select {
   .preview table {
     display: table;
     overflow: visible;
+  }
+
+  html.paged-print .app-shell,
+  html.paged-print #file-input {
+    display: none;
+  }
+
+  html.paged-print #paged-output {
+    position: static;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  html.paged-print #paged-output .pagedjs_page {
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+    overflow: hidden;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  html.paged-print #paged-output .pagedjs_page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  html.paged-print #paged-output .pagedjs_sheet,
+  html.paged-print #paged-output .pagedjs_pagebox {
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  html.paged-print #paged-output .preview.paged-source {
+    min-height: 0;
+    padding: 0;
+  }
+
+  html.dark-print.paged-print,
+  html.dark-print.paged-print body,
+  html.dark-print.paged-print #paged-output,
+  html.dark-print.paged-print #paged-output .pagedjs_pages,
+  html.dark-print.paged-print #paged-output .pagedjs_page,
+  html.dark-print.paged-print #paged-output .pagedjs_sheet,
+  html.dark-print.paged-print #paged-output .pagedjs_pagebox,
+  html.dark-print.paged-print #paged-output .pagedjs_page_content,
+  html.dark-print.paged-print #paged-output .pagedjs_area,
+  html.dark-print.paged-print #paged-output [class*="pagedjs_margin"] {
+    background-color: #181a1b !important;
+  }
+
+  html.dark-print.paged-print #paged-output .pagedjs_page_content,
+  html.dark-print.paged-print #paged-output .pagedjs_area {
+    color: #e8e6e3;
   }
 }
