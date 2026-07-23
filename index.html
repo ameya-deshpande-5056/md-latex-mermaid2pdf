@@ -105,14 +105,15 @@
           <section>
           <h2>Format</h2>
           <div class="button-grid">
-            <button type="button" data-insert="bold">Bold</button>
-            <button type="button" data-insert="italic">Italic</button>
-            <button type="button" data-insert="code">Code</button>
-            <button type="button" data-insert="link">Link</button>
-            <button type="button" data-insert="image">Image</button>
-            <button type="button" data-insert="table">Table</button>
-            <button type="button" data-insert="math">Math</button>
-            <button type="button" data-insert="diagram">Diagram</button>
+            <button type="button" data-insert="bold" aria-label="Bold" title="Bold"><strong aria-hidden="true">B</strong></button>
+            <button type="button" data-insert="italic" aria-label="Italic" title="Italic"><em aria-hidden="true">I</em></button>
+            <button type="button" data-insert="underline" aria-label="Underline" title="Underline"><u aria-hidden="true">U</u></button>
+            <button type="button" data-insert="code" aria-label="Code" title="Code"><span aria-hidden="true">&lt;/&gt;</span></button>
+            <button type="button" data-insert="link" aria-label="Link" title="Link"><span aria-hidden="true">&#x1F517;</span></button>
+            <button type="button" data-insert="image" aria-label="Image" title="Image"><span aria-hidden="true">&#x1F5BC;&#xFE0F;</span></button>
+            <button type="button" data-insert="table" aria-label="Table" title="Table"><span aria-hidden="true">&#x25A6;</span></button>
+            <button type="button" data-insert="math" aria-label="Math" title="Math"><span aria-hidden="true">&#x2211;</span></button>
+            <button type="button" data-insert="diagram" aria-label="Diagram" title="Diagram"><span aria-hidden="true">&#x25C7;</span></button>
           </div>
           <button id="format-md" type="button" class="wide">Format Markdown</button>
           </section>

@@ -43,6 +43,8 @@ You can also open `index.html` directly, although a local server gives more cons
 
 The document title is derived from the first Markdown heading unless you enter a custom title. It is also used as the downloaded filename.
 
+Use `**bold**`, `_italic_`, and `++underline++` for inline text formatting.
+
 ### Themes
 
 - **Paper** is the default general-purpose print layout.
