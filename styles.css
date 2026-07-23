@@ -308,7 +308,7 @@ button:hover {
 
 .button-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .wide {
@@ -1280,7 +1280,7 @@ select {
   }
 
   .button-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .editor-pane,

@@ -4,7 +4,7 @@ const sampleDocument = `# Markdown LaTeX PDF Studio
 
 ## Markdown
 
-Use **bold**, _italic_, tables, footnotes, task lists, fenced code, diagrams, and page breaks.
+Use **bold**, _italic_, ++underline++, tables, footnotes, task lists, fenced code, diagrams, and page breaks.
 
 - [x] Live preview
 - [x] LaTeX rendering
@@ -1067,6 +1067,7 @@ function insertSnippet(type) {
   const snippets = {
     bold: ["**", "**", "bold text"],
     italic: ["_", "_", "italic text"],
+    underline: ["++", "++", "underlined text"],
     code: ["`", "`", "code"],
     link: ["[", "](https://example.com)", "link text"],
     image: ["![", "](https://example.com/image.png)", "alt text"],
