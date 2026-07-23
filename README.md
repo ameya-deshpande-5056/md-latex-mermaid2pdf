@@ -4,6 +4,13 @@ A browser-based Markdown editor for writing documents with LaTeX equations, Merm
 
 **[Open the live app](https://mdlatexmermaid2pdf.netlify.app/)**
 
+## Screenshots
+
+<p>
+  <img src="assets/screenshots/dark-mode.png" alt="Dark mode editor and preview" width="49%">
+  <img src="assets/screenshots/light-mode.png" alt="Light mode editor and preview" width="49%">
+</p>
+
 ## Features
 
 - Live Markdown preview with tables, task lists, footnotes, definition lists, and typographic extensions
