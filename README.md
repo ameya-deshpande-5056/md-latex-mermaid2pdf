@@ -61,7 +61,7 @@ Use `**bold**`, `_italic_`, and `++underline++` for inline text formatting.
 
 ### LaTeX
 
-Use dollar delimiters for inline and display math:
+Use `$...$` or `\(...\)` for inline math and `$$...$$` or `\[...\]` for display math. Escape ampersands inside math (for example `\text{P\&S}`), since `&` is an alignment character:
 
 ```markdown
 Euler's identity is $e^{i\pi} + 1 = 0$.

@@ -591,6 +591,8 @@ function protectMath(markdown) {
     if (part.startsWith("```")) return part;
     return part
       .replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => storeMath(items, "display", tex))
+      .replace(/\\\[([\s\S]+?)\\\]/g, (_, tex) => storeMath(items, "display", tex))
+      .replace(/\\\(([\s\S]+?)\\\)/g, (_, tex) => storeMath(items, "inline", tex))
       .replace(/(^|[^\\])\$([^\n$]+?)\$/g, (_, prefix, tex) => `${prefix}${storeMath(items, "inline", tex)}`);
   }).join("");
   return { source, items };
