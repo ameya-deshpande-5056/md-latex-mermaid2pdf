@@ -600,8 +600,14 @@ function protectMath(markdown) {
 
 function storeMath(items, type, tex) {
   const key = `@@MATH${items.length}@@`;
-  items.push({ type, tex });
+  items.push({ type, tex: escapeTextAmpersands(tex) });
   return key;
+}
+
+function escapeTextAmpersands(tex) {
+  return tex.replace(/\\text\{((?:[^{}]|\{[^{}]*\})*)\}/g, (match, inner) =>
+    inner.includes("&") ? `\\text{${inner.replace(/&/g, "\\&")}}` : match
+  );
 }
 
 function restoreMath(html, items) {
