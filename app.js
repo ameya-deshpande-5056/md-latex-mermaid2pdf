@@ -600,13 +600,13 @@ function protectMath(markdown) {
 
 function storeMath(items, type, tex) {
   const key = `@@MATH${items.length}@@`;
-  items.push({ type, tex: escapeTextAmpersands(tex) });
+  items.push({ type, tex: escapeTextSpecials(tex) });
   return key;
 }
 
-function escapeTextAmpersands(tex) {
+function escapeTextSpecials(tex) {
   return tex.replace(/\\text\{((?:[^{}]|\{[^{}]*\})*)\}/g, (match, inner) =>
-    inner.includes("&") ? `\\text{${inner.replace(/&/g, "\\&")}}` : match
+    /[&#$%_^]/.test(inner) ? `\\text{${inner.replace(/\\?[&#$%_^]/g, (m) => (m.length === 2 ? m : `\\${m}`))}}` : match
   );
 }
 

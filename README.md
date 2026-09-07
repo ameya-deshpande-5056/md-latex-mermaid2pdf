@@ -61,7 +61,7 @@ Use `**bold**`, `_italic_`, and `++underline++` for inline text formatting.
 
 ### LaTeX
 
-Use `$...$` or `\(...\)` for inline math and `$$...$$` or `\[...\]` for display math (bare `[ ... ]` brackets are Markdown link/footnote syntax, not math). Unescaped `&` inside `\text{...}` is escaped automatically; elsewhere `&` is an alignment character and must be written as `\&`:
+Use `$...$` or `\(...\)` for inline math and `$$...$$` or `\[...\]` for display math (bare `[ ... ]` brackets are Markdown link/footnote syntax, not math). Unescaped special characters (`&`, `#`, `$`, `%`, `_`, `^`) inside `\text{...}` are escaped automatically; elsewhere `&` is an alignment character and must be written as `\&`:
 
 ```markdown
 Euler's identity is $e^{i\pi} + 1 = 0$.
